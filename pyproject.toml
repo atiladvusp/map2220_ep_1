@@ -39,7 +39,6 @@ required-version = ">=0.8.0,<0.9.0"
 addopts = [
     "--durations=10", 
     "--durations-min=1.0",
-    "-p tests.lib.global_fixtures", # Custom plugin to block 'main' database access.
     # "--memray", # Turn on pytest-memray plugin only when needed. Its slows down tests.
     # "-n 6",
     ]
@@ -50,7 +49,8 @@ markers = [
     "disable_db_block: allow a test to connect with 'raw' or 'main' database",
     "no_autouse: disable the autouse fixture for a test"
 ]
-testpaths = ["tests/"]
+testpaths = ["test/"]
+python_files = ["testes.py", "test_*.py", "*_test.py"]
 
 
 [tool.ruff]

@@ -5,10 +5,10 @@ import math
 import numpy as np
 import pytest
 
-from src.main import ResultadoZero, zero_funcao
+from src.main import Resultado, zero_funcao
 
 
-def _assert_convergencia_basica(resultado: ResultadoZero, raiz_esperada: float) -> None:
+def _assert_convergencia_basica(resultado: Resultado, raiz_esperada: float) -> None:
     assert resultado.convergiu is True
     assert abs(resultado.x - raiz_esperada) < 1.0e-8
     assert abs(resultado.fx) < 1.0e-8

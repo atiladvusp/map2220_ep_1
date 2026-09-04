@@ -9,7 +9,20 @@ FuncaoEscalar = Callable[[float], float]
 
 
 @dataclass(slots=True)
-class ResultadoZero:
+class Resultado:
+    """Resultado da execução do metodo de Newton modificado.
+
+    Attributes:
+        x: Aproximacao final obtida para a raiz.
+        fx: Valor de f(x) na aproximacao final.
+        iteracoes: Numero total de iteracoes realizadas.
+        convergiu: Indica se o criterio de parada foi atingido com sucesso.
+        motivo_parada: Texto curto indicando o motivo da parada.
+        contagem_newton: Quantidade de iteracoes que usaram o passo de Newton.
+        contagem_bissecao: Quantidade de iteracoes que usaram dicotomia.
+        historico_metodos: Lista com o metodo utilizado em cada iteracao.
+    """
+
     x: float
     fx: float
     iteracoes: int
@@ -43,7 +56,7 @@ def _criterio_reducao_passo(
 
 
 def _imprimir_relatorio(
-    resultado: ResultadoZero,
+    resultado: Resultado,
     a: float,
     b: float,
     atol: float,
@@ -72,11 +85,35 @@ def zero_funcao(
     rtol: float = 1.0e-10,
     maxit: int = 100,
     relatorio: bool = False,
-) -> ResultadoZero:
-    """Calcula raiz aproximada por Newton modificado com fallback em dicotomia.
+) -> Resultado:
+    """Calcula uma raiz aproximada usando o metodo de Newton modificado.
 
-    O metodo mantem um intervalo [alpha, beta] que isola a raiz e decide
-    iteracao a iteracao se usa Newton ou dicotomia com base nos criterios do EP.
+    O algoritmo combina o passo de Newton com dicotomia. Em cada iteracao, a
+    escolha do metodo depende da permanencia da aproximacao dentro do intervalo
+    atual que isola a raiz e da reducao aceitavel do tamanho do passo.
+
+    Args:
+        f: Funcao escalar cuja raiz se deseja aproximar.
+        df: Derivada de f, usada nas iteracoes candidatas de Newton.
+        a: Extremidade esquerda do intervalo inicial.
+        b: Extremidade direita do intervalo inicial.
+        x0: Aproximacao inicial opcional. Quando nao informada, e escolhido um
+            dos extremos do intervalo inicial.
+        atol: Tolerancia absoluta usada no criterio de parada.
+        rtol: Tolerancia relativa usada no criterio de parada.
+        maxit: Numero maximo de iteracoes permitidas.
+        relatorio: Se True, imprime um relatorio simples da execucao no stdout.
+
+    Returns:
+        Um objeto Resultado contendo a aproximacao final, o valor de f na
+        aproximacao, o numero de iteracoes, o status de convergencia e o
+        historico de metodos usados.
+
+    Raises:
+        TypeError: Se f ou df nao forem chamaveis.
+        ValueError: Se o intervalo for invalido, se as tolerancias forem
+            negativas, se maxit nao for positivo, se nao houver troca de sinal
+            no intervalo ou se x0 nao for um dos extremos do intervalo.
     """
     if not callable(f) or not callable(df):
         raise TypeError("f e df devem ser funcoes chamaveis.")
@@ -93,7 +130,7 @@ def zero_funcao(
     fb = float(f(beta))
 
     if np.isclose(fa, 0.0, atol=np.finfo(float).eps, rtol=0.0):
-        resultado = ResultadoZero(
+        resultado = Resultado(
             x=alpha,
             fx=fa,
             iteracoes=0,
@@ -108,7 +145,7 @@ def zero_funcao(
         return resultado
 
     if np.isclose(fb, 0.0, atol=np.finfo(float).eps, rtol=0.0):
-        resultado = ResultadoZero(
+        resultado = Resultado(
             x=beta,
             fx=fb,
             iteracoes=0,
@@ -139,7 +176,7 @@ def zero_funcao(
     fxn = float(f(xn))
 
     if np.isclose(fxn, 0.0, atol=np.finfo(float).eps, rtol=0.0):
-        resultado = ResultadoZero(
+        resultado = Resultado(
             x=xn,
             fx=fxn,
             iteracoes=0,
@@ -212,7 +249,7 @@ def zero_funcao(
         fxn = fxn1
         delta_xn = delta
 
-    resultado = ResultadoZero(
+    resultado = Resultado(
         x=xn,
         fx=fxn,
         iteracoes=iteracoes,

@@ -1,0 +1,40 @@
+// ATILADV_DEFAULT_DEVCONTAINER
+{
+	"name": "map2220_ep_1",
+	"containerUser": "atiladv",
+	"remoteUser": "atiladv",
+	"build": { 
+		"dockerfile": "../Dockerfile",
+		"context": "..", 
+		"args": {"tag":"map2220_ep_1:dev"}	
+	},
+	"runArgs": [
+				"--name=vscode-map2220_ep_1-dev",  // Naming the container
+				// "--network=map2220_ep_1-net",  // Connecting to the custom map2220_ep_1 network
+				// "--add-host=host.docker.internal:host-gateway"  // Enable host-gateway
+	],
+	// Note: The mounting is done one folder up because vscode will always copy the 
+	// workspaceFolder contents into the container, resulting in /usr/map2220_ep_1/map2220_ep_1.
+	"workspaceFolder": "/usr/map2220_ep_1", 
+	"workspaceMount": "source=${localWorkspaceFolder},target=/usr/map2220_ep_1,type=bind",
+	"mounts": [
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"ms-python.debugpy",
+				"ms-dotnettools.vscode-dotnet-runtime",
+				"ms-toolsai.datawrangler",
+				"ms-toolsai.jupyter",
+				"charliermarsh.ruff",
+				"tamasfe.even-better-toml",
+				"rafaelha.vscode-flamegraph"
+			]
+		}
+	},
+	// "features": {"ghcr.io/devcontainers/features/git:1": {}}
+}

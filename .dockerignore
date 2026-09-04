@@ -1,0 +1,63 @@
+# Ignored Folders 
+# **/folder <<Add any exclusions here>>
+
+
+# Ignored file extensions
+**/*.xls
+**/*.xlsx
+**/*.csv
+**/*.pdf
+**/*.jpg
+**/*.png
+
+
+# Ignored files from build context
+.git
+.vscode
+.env
+.dockerignore
+.devcontainer
+Dockerfile
+
+
+# Ignored custom files
+# **/folder <<Add any exclusions here>>
+
+
+# Exception of previous rules
+# !**/folder <<Add any exceptions here>>
+
+
+# Python project specifics
+# # Virtual environment folders
+**/env/
+**/.env/
+**/.venv/
+
+# # Logs and temporary files
+**/*.log
+**/*.tmp
+
+# # Coverage reports
+**/.coverage
+**/htmlcov/
+
+# # Build artifacts
+# # Build artifacts
+build/
+dist/
+wheels/
+*.egg-info
+**/*.eggs/
+*.py[oc]
+
+
+# # Jupyter Notebook 
+**/.ipynb_checkpoints/
+
+# # Cache files
+**/.cache/
+**/.pytest_cache
+**/__pycache__
+**/tempCodeRunnerFile.python
+**/.mypy_cache

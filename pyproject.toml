@@ -1,0 +1,165 @@
+[project]
+name = "map2220_ep_1"
+version = "0.1.0"
+description = "EP_1"
+readme = "README.md"
+authors = [{ name = "Átila da Veiga", email = "atiladv@gmail.com" }]
+requires-python = ">=3.13" # Version must be in sync with Dockerfile 
+
+
+dependencies = [
+    "numpy>=2.5.2",
+    "pytest>=9.1.1",
+]
+
+
+[dependency-groups]
+# Stubs must be in the same version as the main package above.
+dev = [
+]
+
+
+# [project.scripts]
+# N/A 
+
+
+# [build-system]
+# build-backend = "hatchling.build"
+# requires = ["hatchling"]
+
+
+[tool.uv]
+# The uv version bellow must be (manually) in sync with the Dockerfile that installs uv
+# to all projects images.
+required-version = ">=0.8.0,<0.9.0"
+# default-groups = []
+
+
+[tool.pytest.ini_options]
+addopts = [
+    "--durations=10", 
+    "--durations-min=1.0",
+    "-p tests.lib.global_fixtures", # Custom plugin to block 'main' database access.
+    # "--memray", # Turn on pytest-memray plugin only when needed. Its slows down tests.
+    # "-n 6",
+    ]
+filterwarnings = ["default"]
+log_cli = true
+log_cli_level = "INFO"
+markers = [
+    "disable_db_block: allow a test to connect with 'raw' or 'main' database",
+    "no_autouse: disable the autouse fixture for a test"
+]
+testpaths = ["tests/"]
+
+
+[tool.ruff]
+# See: https://docs.astral.sh/ruff/editors/settings/#format
+line-length = 91
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+
+
+[tool.pyright]
+
+
+
+# Bellow are all available options for Pyright as of September 2024.
+# We must tune it be stricter than the "standard  mode.
+# Reference for 'stricit': https://github.com/microsoft/pyright/blob/main/docs/configuration.md#diagnostic-rule-defaults
+analyzeUnannotatedFunctions = true
+deprecateTypingAliases = false
+disableBytesTypePromotions = true
+enableExperimentalFeatures = false
+enableReachabilityAnalysis = true
+enableTypeIgnoreComments = true
+reportAbstractUsage = "warning"
+reportArgumentType = "warning"
+reportAssertAlwaysTrue = "warning"
+reportAssertTypeFailure = "warning"
+reportAssignmentType = "warning"
+reportAttributeAccessIssue = "warning"
+reportCallIssue = "warning"
+reportConstantRedefinition = "information"
+reportDeprecated = "information"
+reportDuplicateImport = "information"
+reportFunctionMemberAccess = "warning"
+reportGeneralTypeIssues = "warning"
+reportIncompatibleMethodOverride = "warning"
+reportIncompatibleVariableOverride = "warning"
+reportIncompleteStub = "information"
+reportInconsistentConstructor = "information"
+reportInconsistentOverload = "warning"
+reportIndexIssue = "warning"
+reportInvalidStringEscapeSequence = "error"
+reportInvalidStubStatement = "error"
+reportInvalidTypeArguments = "error"
+reportInvalidTypeForm = "error"
+reportInvalidTypeVarUse = "error"
+reportMatchNotExhaustive = "information"
+reportMissingImports = "warning"
+reportMissingModuleSource = "information"
+reportMissingParameterType = "none" # Crank up to information one day...
+reportMissingTypeArgument = "none" # Crank up to information one day...
+reportMissingTypeStubs = "information"
+reportNoOverloadImplementation = "warning"
+reportOperatorIssue = "warning"
+reportOptionalCall = "warning"
+reportOptionalContextManager = "warning"
+reportOptionalIterable = "warning"
+reportOptionalMemberAccess = "warning"
+reportOptionalOperand = "warning"
+reportOptionalSubscript = "warning"
+reportOverlappingOverload = "warning"
+reportPossiblyUnboundVariable = "warning"
+reportPrivateImportUsage = "warning"
+reportPrivateUsage = "none" # Unecessary since the variable name itself serves to shows this
+reportRedeclaration = "warning"
+reportReturnType = "warning"
+reportSelfClsParameterName = "warning"
+reportTypeCommentUsage = "information"
+reportTypedDictNotRequiredAccess = "warning"
+reportUnboundVariable = "warning"
+reportUndefinedVariable = "error"
+reportUnhashable = "warning"
+reportUnknownArgumentType = "none" # Consider setting as information
+reportUnknownLambdaType = "none" # Consider setting as information
+reportUnknownMemberType = "none" # Consider setting as information
+reportUnknownParameterType = "none" # Consider setting as information
+reportUnknownVariableType = "none" # Consider setting as information
+reportUnnecessaryCast = "information"
+reportUnnecessaryComparison = "none" # Consider setting as information
+reportUnnecessaryContains = "none" # Consider setting as information
+reportUnnecessaryIsInstance = "none" # By now I prefer to keep the runtime checks for safety
+reportUnsupportedDunderAll = "warning"
+reportUntypedBaseClass = "information"
+reportUntypedClassDecorator = "information"
+reportUntypedFunctionDecorator = "information"
+reportUntypedNamedTuple = "information"
+reportUnusedClass = "information"
+reportUnusedCoroutine = "warning"
+reportUnusedExcept = "warning"
+reportUnusedExpression = "warning"
+reportUnusedFunction = "information"
+reportUnusedImport = "information"
+reportUnusedVariable = "information"
+reportWildcardImportFromLibrary = "warning"
+strictDictionaryInference = true
+strictListInference = true
+strictParameterNoneValue = true
+strictSetInference = true
+# The reports bellow are set to 'none' enve in 'strict' mode
+reportCallInDefaultInitializer = "none"
+reportImplicitOverride = "none" # Change to information when move to python 3.12
+reportImplicitStringConcatenation = "none" # Style preference
+reportImportCycles = "information"
+reportMissingSuperCall = "none" # Not useful 
+reportPropertyTypeMismatch = "information"
+reportUninitializedInstanceVariable = "none" # Too limiting. See no need of it.
+reportUnnecessaryTypeIgnoreComment = "information"
+reportUnusedCallResult = "none"
+
+

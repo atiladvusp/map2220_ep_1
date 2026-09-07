@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Literal
 
 import numpy as np
 
 FuncaoEscalar = Callable[[float], float]
+Metodo = Literal["modificado", "somente_newton", "somente_bissecao"]
 
 
 @dataclass(slots=True)
@@ -42,6 +44,7 @@ def zero_funcao(
     atol: float = 1.0e-10,
     rtol: float = 1.0e-10,
     maxit: int = 100,
+    metodo: Metodo = "modificado",
     relatorio: bool = False,
 ) -> Resultado:
     """Calcula uma raiz aproximada usando o metodo de Newton modificado.
@@ -60,6 +63,11 @@ def zero_funcao(
         atol: Tolerancia absoluta usada no criterio de parada.
         rtol: Tolerancia relativa usada no criterio de parada.
         maxit: Numero maximo de iteracoes permitidas.
+        metodo: Estrategia de selecao do passo. "modificado" combina Newton e
+            dicotomia conforme os criterios do enunciado (comportamento padrao).
+            "somente_newton" usa exclusivamente o passo de Newton, sem recorrer
+            a dicotomia mesmo que isso resulte em erro ou divergencia.
+            "somente_bissecao" usa exclusivamente dicotomia; df nunca e chamada.
         relatorio: Se True, imprime um relatorio simples da execucao no stdout.
 
     Returns:
@@ -71,7 +79,8 @@ def zero_funcao(
         TypeError: Se f ou df nao forem funcoes.
         ValueError: Se o intervalo for invalido, se as tolerancias forem
             negativas, se maxit nao for positivo, se nao houver troca de sinal
-            no intervalo ou se x0 nao for um dos extremos do intervalo.
+            no intervalo, se x0 nao for um dos extremos do intervalo ou se
+            metodo nao for um dos valores aceitos.
     """
     # # TESTES INICIAIS DE VALIDADE DOS PARAMETROS MANUAIS
     if not callable(f) or not callable(df):
@@ -82,6 +91,10 @@ def zero_funcao(
         raise ValueError("As tolerancias atol e rtol devem ser nao negativas.")
     if maxit <= 0:
         raise ValueError("maxit deve ser positivo.")
+    if metodo not in ("modificado", "somente_newton", "somente_bissecao"):
+        raise ValueError(
+            "metodo deve ser 'modificado', 'somente_newton' ou 'somente_bissecao'."
+        )
 
     alpha = float(a)
     beta = float(b)
@@ -110,30 +123,36 @@ def zero_funcao(
     delta_xn: float | None = None
 
     for n in range(maxit):
-        dfxn = float(df(xn))
-
-        # # AVALIA CRITERIOS DE SELECAO DE METODO
-        # Criterios 2 e 3 fazem referencia a numeracao dos critreios conforme o enunciado
-        # do EP.
-        criterio_2 = False
-        criterio_3 = False
-
-        criterio_2 = ((xn - alpha) * dfxn - fxn) * ((xn - beta) * dfxn - fxn) < 0
-        if delta_xn is None:
-            criterio_3 = True
+        if metodo == "somente_bissecao":
+            usar_newton = False
+        elif metodo == "somente_newton":
+            usar_newton = True
+            dfxn = float(df(xn))
         else:
-            criterio_3 = 2.0 * abs(fxn) < abs(dfxn * delta_xn)
+            dfxn = float(df(xn))
 
-        if criterio_2 and criterio_3:
+            # # AVALIA CRITERIOS DE SELECAO DE METODO
+            # Criterios 2 e 3 fazem referencia a numeracao dos critreios conforme o
+            # enunciado do EP.
+            criterio_2 = ((xn - alpha) * dfxn - fxn) * ((xn - beta) * dfxn - fxn) < 0
+            if delta_xn is None:
+                criterio_3 = True
+            else:
+                criterio_3 = 2.0 * abs(fxn) < abs(dfxn * delta_xn)
+            usar_newton = criterio_2 and criterio_3
+
+        if usar_newton:
+            if np.isclose(dfxn, 0.0, atol=np.finfo(float).eps, rtol=0.0):
+                raise ZeroDivisionError("Derivada nula em metodo de Newton.")
             xn1 = xn - fxn / dfxn  # metodo de Newton
-            metodo = "newton"
+            metodo_usado = "newton"
             contagem_newton += 1
         else:
             xn1 = 0.5 * (alpha + beta)
-            metodo = "dicotomia"
+            metodo_usado = "dicotomia"
             contagem_bissecao += 1
 
-        historico_metodos.append(metodo)
+        historico_metodos.append(metodo_usado)
         fxn1 = float(f(xn1))
         iteracoes = n + 1
 

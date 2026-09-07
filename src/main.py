@@ -33,48 +33,6 @@ class Resultado:
     historico_metodos: list[str]
 
 
-def _criterio_intervalo_newton(
-    xn: float,
-    alpha: float,
-    beta: float,
-    fxn: float,
-    dfxn: float,
-) -> bool:
-    termo_a = (xn - alpha) * dfxn - fxn
-    termo_b = (xn - beta) * dfxn - fxn
-    return termo_a * termo_b < 0.0
-
-
-def _criterio_reducao_passo(
-    fxn: float,
-    dfxn: float,
-    delta_xn: float | None,
-) -> bool:
-    if delta_xn is None:
-        return True
-    return 2.0 * abs(fxn) < abs(dfxn * delta_xn)
-
-
-def _imprimir_relatorio(
-    resultado: Resultado,
-    a: float,
-    b: float,
-    atol: float,
-    rtol: float,
-    maxit: int,
-) -> None:
-    print("Relatorio do metodo de Newton modificado")
-    print(f"Intervalo inicial: [{a}, {b}]")
-    print(f"ATOL={atol}, RTOL={rtol}, MAXIT={maxit}")
-    print(f"Iteracoes realizadas: {resultado.iteracoes}")
-    print(f"Passos de Newton: {resultado.contagem_newton}")
-    print(f"Passos de dicotomia: {resultado.contagem_bissecao}")
-    print(f"Convergiu: {resultado.convergiu}")
-    print(f"Motivo da parada: {resultado.motivo_parada}")
-    print(f"Aproximacao final: x={resultado.x}")
-    print(f"Residuo final: |f(x)|={abs(resultado.fx)}")
-
-
 def zero_funcao(
     f: FuncaoEscalar,
     df: FuncaoEscalar,
@@ -110,13 +68,14 @@ def zero_funcao(
         historico de metodos usados.
 
     Raises:
-        TypeError: Se f ou df nao forem chamaveis.
+        TypeError: Se f ou df nao forem funcoes.
         ValueError: Se o intervalo for invalido, se as tolerancias forem
             negativas, se maxit nao for positivo, se nao houver troca de sinal
             no intervalo ou se x0 nao for um dos extremos do intervalo.
     """
+    # # TESTES INICIAIS DE VALIDADE DOS PARAMETROS MANUAIS
     if not callable(f) or not callable(df):
-        raise TypeError("f e df devem ser funcoes chamaveis.")
+        raise TypeError("f e df devem ser funcoes funcoes.")
     if not (a < b):
         raise ValueError("O intervalo deve satisfazer a < b.")
     if atol < 0.0 or rtol < 0.0:
@@ -126,71 +85,22 @@ def zero_funcao(
 
     alpha = float(a)
     beta = float(b)
-    fa = float(f(alpha))
+    f_alpha = float(f(alpha))
     fb = float(f(beta))
 
-    if np.isclose(fa, 0.0, atol=np.finfo(float).eps, rtol=0.0):
-        resultado = Resultado(
-            x=alpha,
-            fx=fa,
-            iteracoes=0,
-            convergiu=True,
-            motivo_parada="raiz_exata",
-            contagem_newton=0,
-            contagem_bissecao=0,
-            historico_metodos=[],
-        )
-        if relatorio:
-            _imprimir_relatorio(resultado, a, b, atol, rtol, maxit)
-        return resultado
-
-    if np.isclose(fb, 0.0, atol=np.finfo(float).eps, rtol=0.0):
-        resultado = Resultado(
-            x=beta,
-            fx=fb,
-            iteracoes=0,
-            convergiu=True,
-            motivo_parada="raiz_exata",
-            contagem_newton=0,
-            contagem_bissecao=0,
-            historico_metodos=[],
-        )
-        if relatorio:
-            _imprimir_relatorio(resultado, a, b, atol, rtol, maxit)
-        return resultado
-
-    if fa * fb > 0.0:
+    if f_alpha * fb > 0.0:
         raise ValueError("O intervalo inicial deve ter troca de sinal: f(a)*f(b) < 0.")
 
     if x0 is None:
-        xn = alpha if abs(fa) <= abs(fb) else beta
+        xn = alpha if abs(f_alpha) <= abs(fb) else beta
     else:
         xn = float(x0)
-        if not (np.isclose(xn, alpha) or np.isclose(xn, beta)):
-            raise ValueError("x0 deve ser um dos extremos do intervalo inicial.")
+        if xn < alpha or xn > beta:
+            raise ValueError("x0 deve estar dentro do intervalo [a, b].")
 
-    # Mantemos os valores de f(alpha) e f(beta) sincronizados para evitar
-    # recomputacoes desnecessarias e manter o metodo previsivel numericamente.
-    f_alpha = fa
-    f_beta = fb
     fxn = float(f(xn))
 
-    if np.isclose(fxn, 0.0, atol=np.finfo(float).eps, rtol=0.0):
-        resultado = Resultado(
-            x=xn,
-            fx=fxn,
-            iteracoes=0,
-            convergiu=True,
-            motivo_parada="raiz_exata",
-            contagem_newton=0,
-            contagem_bissecao=0,
-            historico_metodos=[],
-        )
-        if relatorio:
-            _imprimir_relatorio(resultado, a, b, atol, rtol, maxit)
-        return resultado
-
-    eps_derivada = 1.0e-14
+    # # INICIALIZACAO DE VARIAVEIS DE CONTROLE E HISTORICO DE METODOS
     iteracoes = 0
     convergiu = False
     motivo_parada = "maxit"
@@ -201,16 +111,21 @@ def zero_funcao(
 
     for n in range(maxit):
         dfxn = float(df(xn))
-        pode_newton = abs(dfxn) > eps_derivada
+
+        # # AVALIA CRITERIOS DE SELECAO DE METODO
+        # Criterios 2 e 3 fazem referencia a numeracao dos critreios conforme o enunciado
+        # do EP.
         criterio_2 = False
         criterio_3 = False
 
-        if pode_newton:
-            criterio_2 = _criterio_intervalo_newton(xn, alpha, beta, fxn, dfxn)
-            criterio_3 = _criterio_reducao_passo(fxn, dfxn, delta_xn)
+        criterio_2 = ((xn - alpha) * dfxn - fxn) * ((xn - beta) * dfxn - fxn) < 0
+        if delta_xn is None:
+            criterio_3 = True
+        else:
+            criterio_3 = 2.0 * abs(fxn) < abs(dfxn * delta_xn)
 
-        if pode_newton and criterio_2 and criterio_3:
-            xn1 = xn - fxn / dfxn
+        if criterio_2 and criterio_3:
+            xn1 = xn - fxn / dfxn  # metodo de Newton
             metodo = "newton"
             contagem_newton += 1
         else:
@@ -232,7 +147,6 @@ def zero_funcao(
         # Atualizacao do intervalo isolante pela troca de sinal.
         if f_alpha * fxn1 < 0.0:
             beta = xn1
-            f_beta = fxn1
         else:
             alpha = xn1
             f_alpha = fxn1
@@ -249,6 +163,7 @@ def zero_funcao(
         fxn = fxn1
         delta_xn = delta
 
+    # # CONSTRUCAO DO RESUMO DE EXECUCAO DO ALGORITMO
     resultado = Resultado(
         x=xn,
         fx=fxn,
@@ -261,6 +176,15 @@ def zero_funcao(
     )
 
     if relatorio:
-        _imprimir_relatorio(resultado, a, b, atol, rtol, maxit)
+        print("Relatorio do metodo de Newton modificado")
+        print(f"Intervalo inicial: [{a}, {b}]")
+        print(f"ATOL={atol}, RTOL={rtol}, MAXIT={maxit}")
+        print(f"Iteracoes realizadas: {resultado.iteracoes}")
+        print(f"Passos de Newton: {resultado.contagem_newton}")
+        print(f"Passos de dicotomia: {resultado.contagem_bissecao}")
+        print(f"Convergiu: {resultado.convergiu}")
+        print(f"Motivo da parada: {resultado.motivo_parada}")
+        print(f"Aproximacao final: x={resultado.x}")
+        print(f"Residuo final: |f(x)|={abs(resultado.fx)}")
 
     return resultado

@@ -60,6 +60,26 @@ def test_forca_dicotomia_quando_newton_sai_do_intervalo() -> None:
     assert abs(resultado.x - math.log(10.0)) < 1.0e-8
 
 
+def test_forca_dicotomia_quando_newton_sai_do_intervalo_2() -> None:
+    # Testa com caso de arctan com raiz inicial distante do zero.
+    f = lambda x: math.atan(x)
+    df = lambda x: 1.0 / (1.0 + x * x)
+    resultado = zero_funcao(f, df, -100.0, 1000.0, x0=999.0)
+    assert resultado.convergiu is True
+    assert resultado.contagem_bissecao >= 1
+    assert resultado.contagem_newton >= 1
+    assert abs(resultado.x - math.tan(0.0)) < 1.0e-8
+
+
+@pytest.mark.skip
+def test_funcao_pode_oscilar_sem_convergir_so_newton() -> None:
+    f = lambda x: x**3 - 2 * x + 2
+    df = lambda x: 3 * x * x - 2
+    resultado = zero_funcao(f, df, -2.0, 2.0)
+    assert resultado.convergiu is False
+    assert resultado.motivo_parada == "maxit"
+
+
 def test_derivada_muito_pequena_cai_para_dicotomia() -> None:
     f = lambda x: x**3 - 1.0e-12
     df = lambda x: 3.0 * x * x
@@ -96,8 +116,8 @@ def test_intervalo_sem_troca_de_sinal_gera_erro() -> None:
 def test_x0_invalido_gera_erro() -> None:
     f = lambda x: x - 2.0
     df = lambda x: 1.0
-    with pytest.raises(ValueError, match="extremos"):
-        zero_funcao(f, df, 0.0, 5.0, x0=1.0)
+    with pytest.raises(ValueError, match="x0 deve estar dentro do intervalo"):
+        zero_funcao(f, df, 0.0, 5.0, x0=-1.0)
 
 
 def test_parametros_invalidos_geram_erro() -> None:

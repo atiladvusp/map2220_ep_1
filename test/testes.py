@@ -60,6 +60,83 @@ def test_forca_dicotomia_quando_newton_sai_do_intervalo() -> None:
     assert abs(resultado.x - math.log(10.0)) < 1.0e-8
 
 
+def test_forca_dicotomia_quando_newton_sai_do_intervalo_2() -> None:
+    # Testa com caso de arctan com raiz inicial distante do zero.
+    f = lambda x: math.atan(x)
+    df = lambda x: 1.0 / (1.0 + x * x)
+    resultado = zero_funcao(f, df, -100.0, 1000.0, x0=999.0)
+    assert resultado.convergiu is True
+    assert resultado.contagem_bissecao >= 1
+    assert resultado.contagem_newton >= 1
+    assert abs(resultado.x - math.tan(0.0)) < 1.0e-8
+
+
+def test_metodo_somente_newton_nunca_usa_dicotomia() -> None:
+    # Mesmo caso de test_forca_dicotomia_quando_newton_sai_do_intervalo, onde
+    # "modificado" usa tanto Newton quanto dicotomia.
+    f = lambda x: math.exp(x) - 10.0
+    df = lambda x: math.exp(x)
+    resultado = zero_funcao(f, df, 0.0, 3.0, metodo="somente_newton")
+    assert resultado.contagem_bissecao == 0
+    assert set(resultado.historico_metodos) == {"newton"}
+    assert resultado.convergiu is True
+    assert abs(resultado.x - math.log(10.0)) < 1.0e-8
+
+
+def test_metodo_somente_bissecao_nunca_usa_newton() -> None:
+    # Mesmo caso de test_forca_dicotomia_quando_newton_sai_do_intervalo, onde
+    # "modificado" usa tanto Newton quanto dicotomia.
+    f = lambda x: math.exp(x) - 10.0
+    df = lambda x: math.exp(x)
+    resultado = zero_funcao(f, df, 0.0, 3.0, metodo="somente_bissecao")
+    assert resultado.contagem_newton == 0
+    assert set(resultado.historico_metodos) == {"dicotomia"}
+    assert resultado.convergiu is True
+    assert abs(resultado.x - math.log(10.0)) < 1.0e-7
+
+
+def test_metodo_somente_bissecao_nao_chama_df() -> None:
+    def df_lanca_erro(_x: float) -> float:
+        raise AssertionError("df nao deveria ser chamada em somente_bissecao")
+
+    f = lambda x: math.exp(x) - 10.0
+    resultado = zero_funcao(f, df_lanca_erro, 0.0, 3.0, metodo="somente_bissecao")
+    assert resultado.convergiu is True
+
+
+def test_metodo_somente_newton_propaga_erro_de_derivada_nula() -> None:
+    f = lambda x: x**3
+    df = lambda x: 3.0 * x * x
+    with pytest.raises(ZeroDivisionError):
+        zero_funcao(f, df, -1.0, 1.0, x0=0.0, metodo="somente_newton")
+
+
+def test_metodo_invalido_gera_erro() -> None:
+    f = lambda x: x - 2.0
+    df = lambda x: 1.0
+    with pytest.raises(ValueError, match="metodo"):
+        zero_funcao(f, df, 0.0, 5.0, metodo="invalido")
+
+
+def test_funcao_pode_nao_convergir_so_newton_1() -> None:
+    f = lambda x: x**3 - 2 * x + 2
+    df = lambda x: 3 * x * x - 2
+    resultado = zero_funcao(f, df, -2, 2, x0=0, metodo="modificado")
+    assert resultado.convergiu is True
+    resultado = zero_funcao(f, df, -2, 2, x0=0, metodo="somente_newton")
+    assert resultado.convergiu is False
+    assert resultado.motivo_parada == "maxit"
+
+
+def test_funcao_pode_nao_convergir_so_newton_2() -> None:
+    f = lambda x: x**3 - 3 * x
+    df = lambda x: 3 * x**2 - 3
+    resultado = zero_funcao(f, df, -2, 2, x0=1, metodo="modificado")
+    assert resultado.convergiu and resultado.x == 0.0
+    with pytest.raises(ZeroDivisionError):
+        resultado = zero_funcao(f, df, -2, 2, x0=1, metodo="somente_newton")
+
+
 def test_derivada_muito_pequena_cai_para_dicotomia() -> None:
     f = lambda x: x**3 - 1.0e-12
     df = lambda x: 3.0 * x * x
@@ -96,8 +173,8 @@ def test_intervalo_sem_troca_de_sinal_gera_erro() -> None:
 def test_x0_invalido_gera_erro() -> None:
     f = lambda x: x - 2.0
     df = lambda x: 1.0
-    with pytest.raises(ValueError, match="extremos"):
-        zero_funcao(f, df, 0.0, 5.0, x0=1.0)
+    with pytest.raises(ValueError, match="x0 deve estar dentro do intervalo"):
+        zero_funcao(f, df, 0.0, 5.0, x0=-1.0)
 
 
 def test_parametros_invalidos_geram_erro() -> None:

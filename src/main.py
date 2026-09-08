@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Literal
@@ -116,7 +117,6 @@ def zero_funcao(
     # # INICIALIZACAO DE VARIAVEIS DE CONTROLE E HISTORICO DE METODOS
     iteracoes = 0
     convergiu = False
-    motivo_parada = "maxit"
     contagem_newton = 0
     contagem_bissecao = 0
     historico_metodos: list[str] = []
@@ -156,6 +156,22 @@ def zero_funcao(
         fxn1 = float(f(xn1))
         iteracoes = n + 1
 
+        # Critério de parada (a)
+        delta = xn1 - xn
+        if abs(delta) < atol + rtol * abs(xn1):
+            xn = xn1
+            fxn = fxn1
+            convergiu = True
+            motivo_parada = "tolerancia"
+            break
+
+        # Critério de parada (b)
+        if iteracoes >= maxit:
+            convergiu = False
+            motivo_parada = "maxit"
+            break
+
+        # Critério de parada (c)
         if np.isclose(fxn1, 0.0, atol=np.finfo(float).eps, rtol=0.0):
             xn = xn1
             fxn = fxn1
@@ -171,12 +187,6 @@ def zero_funcao(
             f_alpha = fxn1
 
         delta = xn1 - xn
-        if abs(delta) < atol + rtol * abs(xn1):
-            xn = xn1
-            fxn = fxn1
-            convergiu = True
-            motivo_parada = "tolerancia"
-            break
 
         xn = xn1
         fxn = fxn1
@@ -207,3 +217,105 @@ def zero_funcao(
         print(f"Residuo final: |f(x)|={abs(resultado.fx)}")
 
     return resultado
+
+
+# TAREFA 3.1: Queda de um corpo sob a acao da resistencia do ar
+# # Implementacao
+def encontrar_k_queda_corpo(
+    M: float = 1.0,  # valor sugerido na tarefa
+    g: float = 10.0,  # valor sugerido na tarefa
+    v0: float = 3.0,  # valor sugerido na tarefa
+    t: float = 2.0,
+    v_alvo: float = 20.0,  # v(2) conforme tarefa
+    a: float = -1.0,
+    b: float = 5.0,
+    relatorio: bool = False,
+) -> Resultado:
+    """Determina k tal que a velocidade de queda v(t) atinja v_alvo .
+
+    Modela v(t) = (Mg - e^(-(t/M)k)(Mg - v0*k)) / k e usa zero_funcao para achar
+    a raiz de f(k) = v(t) - v_alvo no intervalo [a, b].
+
+    Args:
+        M: Massa do corpo.
+        g: Aceleracao da gravidade.
+        v0: Velocidade inicial (em t=0).
+        t: Instante em que a velocidade alvo deve ser atingida.
+        v_alvo: Velocidade desejada no instante t.
+        a: Extremidade esquerda do intervalo de busca para k.
+        b: Extremidade direita do intervalo de busca para k.
+        relatorio: Se True, imprime o relatorio de zero_funcao.
+
+    Returns:
+        O Resultado de zero_funcao aplicado a f(k) = v(t; k) - v_alvo.
+    """
+    c = t / M
+    mg = M * g
+
+    def f(k: float) -> float:
+        n = mg - math.exp(-c * k) * (mg - v0 * k)
+        return n / k - v_alvo
+
+    def df(k: float) -> float:
+        exp_ck = math.exp(-c * k)
+        n = mg - exp_ck * (mg - v0 * k)
+        dn = exp_ck * (c * (mg - v0 * k) + v0)
+        return (dn * k - n) / (k * k)
+
+    print("\n\nTAREFA 3.1:\n")
+    return zero_funcao(f, df, a, b, relatorio=relatorio)
+
+
+# TAREFA 3.1: Determinar k para a queda de um corpo com velocidade alvo v_alvo
+# # Resultado
+encontrar_k_queda_corpo(relatorio=True)
+
+
+# TAREFA 3.2: Altura dos FIos de transmissao de eletrecidade
+# # Implementacao
+def encontrar_beta_catenaria(
+    x_max: float = 10.0,  # Extremo do cabo onde a diferenca de altura e medida
+    delta_alvo: float = 0.5,  # Objetivo
+    a: float = 1,  # evitar ser zero
+    b: float = 99999,
+    relatorio: bool = False,
+) -> Resultado:
+    """Determina beta da catenaria y = alpha + beta*cosh(x/beta) .
+
+    Como f(x_max) - f(0) nao depende de alpha, resolve-se
+    func(beta) = beta*(cosh(x_max/beta) - 1) - delta_alvo = 0 via zero_funcao.
+
+    Args:
+        x_max: Extremidade do cabo onde a diferenca de altura e medida.
+        delta_alvo: Diferenca de altura f(x_max) - f(0) desejada. 0.5 no exemplo.
+        a: Extremidade esquerda do intervalo de busca para beta. Deve ser maior que zero.
+        b: Extremidade direita do intervalo de busca para beta. Deve ser grande.
+        relatorio: Se True, imprime o relatorio de zero_funcao.
+
+    Returns:
+        O Resultado de zero_funcao aplicado a func(beta).
+    """
+
+    def func(beta_: float) -> float:
+        # lembrando, cosh(0/beta_)=1
+        return beta_ * (math.cosh(x_max / beta_) - 1) - delta_alvo
+
+    def d_func(beta_: float) -> float:
+        r = x_max / beta_
+        return math.cosh(r) - r * math.sinh(r) - 1.0
+
+    print("\n\nTAREFA 3.2:\n")
+    return zero_funcao(func, d_func, a, b, relatorio=relatorio)
+
+
+# TAREFA 3.2 Altura dos FIos de transmissao de eletrecidade
+# # Resultado
+encontrar_beta_catenaria(relatorio=True)
+
+
+# TAREFA 4: Formulas de quadratura de Gauss-Legendre
+# Resultado
+
+# TAREFA 4: Formulas de quadratura de Gauss-Legendre
+# Resultado
+# @ Roberta

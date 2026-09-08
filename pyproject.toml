@@ -19,15 +19,6 @@ dev = [
 ]
 
 
-# [project.scripts]
-# N/A 
-
-
-# [build-system]
-# build-backend = "hatchling.build"
-# requires = ["hatchling"]
-
-
 [tool.uv]
 # The uv version bellow must be (manually) in sync with the Dockerfile that installs uv
 # to all projects images.
@@ -36,6 +27,7 @@ required-version = ">=0.8.0,<0.9.0"
 
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 addopts = [
     "--durations=10", 
     "--durations-min=1.0",

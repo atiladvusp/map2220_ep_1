@@ -5,7 +5,12 @@ import math
 import numpy as np
 import pytest
 
-from src.main import Resultado, zero_funcao
+from src.main import (
+    Resultado,
+    encontrar_beta_catenaria,
+    encontrar_k_queda_corpo,
+    zero_funcao,
+)
 
 
 def _assert_convergencia_basica(resultado: Resultado, raiz_esperada: float) -> None:
@@ -155,12 +160,12 @@ def test_raiz_proxima_de_zero_com_atol() -> None:
 
 
 def test_parada_por_maxit() -> None:
-    f = lambda x: x * x - 2.0
-    df = lambda x: 2.0 * x
-    resultado = zero_funcao(f, df, 0.0, 2.0, atol=1.0e-16, rtol=1.0e-16, maxit=1)
+    f = lambda x: x**3 - 2 * x + 2
+    df = lambda x: 3 * x * x - 2
+    resultado = zero_funcao(f, df, -2, 2, x0=0, metodo="somente_newton", maxit=5)
     assert resultado.convergiu is False
     assert resultado.motivo_parada == "maxit"
-    assert resultado.iteracoes == 1
+    assert resultado.iteracoes == 5
 
 
 def test_intervalo_sem_troca_de_sinal_gera_erro() -> None:
@@ -208,3 +213,20 @@ def test_historico_consistente() -> None:
     resultado = zero_funcao(f, df, 0.0, 3.0)
     assert len(resultado.historico_metodos) == resultado.iteracoes
     assert set(resultado.historico_metodos).issubset({"newton", "dicotomia"})
+
+
+def test_encontrar_k_queda_corpo() -> None:
+    resultado = encontrar_k_queda_corpo()
+    assert resultado.convergiu is True
+    M, g, v0, t = 1.0, 10.0, 3.0, 2.0
+    k = resultado.x
+    v_t = (M * g - math.exp(-(t / M) * k) * (M * g - v0 * k)) / k
+    assert abs(v_t - 20.0) < 1.0e-7
+
+
+def test_encontrar_beta_catenaria() -> None:
+    resultado = encontrar_beta_catenaria()
+    assert resultado.convergiu is True
+    beta = resultado.x
+    diferenca = beta * (math.cosh(10.0 / beta) - 1.0)
+    assert abs(diferenca - 0.5) < 1.0e-7

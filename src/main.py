@@ -316,11 +316,11 @@ encontrar_beta_catenaria(relatorio=True)
 # TAREFA 4: Formulas de quadratura de Gauss-Legendre
 # Resultado
 def avaliar_legendre(n, x):
-    """ Função que calcula, no ponto x, os valores do polinômio de
+    """Função que calcula, no ponto x, os valores do polinômio de
     Legendre de grau n e de sua derivada usando as fórmulas de recorrência
     (k + 1)P_k+1(x) = (2k + 1)xP_k(x) - kP_k-1(x)
     e
-    P_k'(x) =k(xP_k - P_k-1)/(x**2 - 1.0) """
+    P_k'(x) =k(xP_k - P_k-1)/(x**2 - 1.0)"""
 
     # Consistência para n:
     if not isinstance(n, int):
@@ -338,20 +338,20 @@ def avaliar_legendre(n, x):
 
     # Inicializa P_0(x) e P_1(x)
     p_k_menos_1 = 1.0  # Guarda P_0(x) = 1
-    p_k = x            # Guarda P_1(x) = x
-    
+    p_k = x  # Guarda P_1(x) = x
+
     # Laço para construir o valor até o grau n
     for k in range(1, n):
         # Aplica a fórmula de recorrência
         p_proximo = ((2.0 * k + 1.0) * x * p_k - k * p_k_menos_1) / (k + 1.0)
-        
+
         # Atualiza as variáveis para a próxima iteração do laço
         p_k_menos_1 = p_k
         p_k = p_proximo
-        
-    # Quando o laço termina, p_k é o valor numérico de P_n(x) e 
+
+    # Quando o laço termina, p_k é o valor numérico de P_n(x) e
     # p_k_menos_1 é o valor numérico de P_{n-1}(x).
-    
+
     # Calcula P_n'(x). Nos extremos x = ±1, utiliza as expressões
     # específicas para evitar a divisão por zero na fórmula geral.
     if x == 1.0:
@@ -359,23 +359,23 @@ def avaliar_legendre(n, x):
     elif x == -1.0:
         if n % 2 == 0:
             derivada = (-1.0) * n * (n + 1.0) / 2.0
-        else: 
+        else:
             derivada = n * (n + 1.0) / 2.0
     else:
         derivada = n * (x * p_k - p_k_menos_1) / (x**2 - 1.0)
-    
+
     return p_k, derivada
 
 
 def calcula_valores_quadratura(grau: int, imprimir: bool = True):
-    """ Calcula as raízes, ou nós, não negativos para os polinômios de Legendre de grau N, para N=1,...,grau,
+    """Calcula as raízes, ou nós, não negativos para os polinômios de Legendre de grau N, para N=1,...,grau,
     e os respectivos pesos omega_j da Fórmula de Quadratura de Gauss-Legendre.
     As raízes negativas podem ser obtidas pela simetria dos polinômios de Legendre, dado que P_N(-x) = (-1)^N P_N(x).
 
-    Retorna duas listas de arrays. Uma lista "raizes" em que cada linha N corresponde a um array com as raízes 
+    Retorna duas listas de arrays. Uma lista "raizes" em que cada linha N corresponde a um array com as raízes
     não negativas de P_N e uma lista "pesos" em que cada linha corresponde a um array com os respectivos pesos.
 
-    Se imprimir == True, imprime os elementos das duas listas. """
+    Se imprimir == True, imprime os elementos das duas listas."""
 
     # Consistências para as entradas da função:
     if not isinstance(grau, int):
@@ -386,49 +386,45 @@ def calcula_valores_quadratura(grau: int, imprimir: bool = True):
         raise TypeError("O parâmetro 'imprimir' deve ser um booleano.")
 
     # Lista com as raízes não negativas dos polinômios
-    raizes = [np.array([]), np.array([0.0])] # P_0(x) = 1 e P_1(x) = x  
-    
-    # Lista com os pesos omega_j dos polinômios para os nós não negativos 
+    raizes = [np.array([]), np.array([0.0])]  # P_0(x) = 1 e P_1(x) = x
+
+    # Lista com os pesos omega_j dos polinômios para os nós não negativos
     pesos = [np.array([]), np.array([2.0])]
 
     # Caso trivial para grau 1
     if grau == 1:
         return raizes, pesos
 
-    for n in range(2, grau + 1): 
-        raizes_n = [] # Guarda os valores calculados para as raízes de P_n
-        pesos_n = [] # Guarda os valores calculados para os pesos de P_n
+    for n in range(2, grau + 1):
+        raizes_n = []  # Guarda os valores calculados para as raízes de P_n
+        pesos_n = []  # Guarda os valores calculados para os pesos de P_n
 
         # Polinômio P_n(x) e derivada P_n'(x)
         p_atual = lambda x, grau1=n: avaliar_legendre(grau1, x)[0]
         dp_atual = lambda x, grau1=n: avaliar_legendre(grau1, x)[1]
 
         # As raízes do polinômio P_n estão entrelaçadas entre as raízes do polinômio P_n-1 dentro do intervalo [-1, 1].
-        # A busca por raízes não negativas de P_n será feita no intervalo entre 0 e a primeira raiz, nos intervalos entre 
+        # A busca por raízes não negativas de P_n será feita no intervalo entre 0 e a primeira raiz, nos intervalos entre
         # duas raízes consecutivas positivas de P_n-1 e no intervalo entre a última raiz e 1. Cada intervalo possui uma única raiz.
-        raizes_anteriores = raizes[n-1]
-        intervalos =  list(raizes_anteriores) + [1.0]
+        raizes_anteriores = raizes[n - 1]
+        intervalos = list(raizes_anteriores) + [1.0]
 
         # Se n é ímpar, x=0 é uma raiz de P_n
-        if (n % 2 == 1):
+        if n % 2 == 1:
             # Acrescenta a raiz x=0 e calcula o peso correspondente
             raizes_n.append(0.0)
             derivada_em_zero = dp_atual(0.0)
             peso = 2.0 / (derivada_em_zero**2)
             pesos_n.append(peso)
-        
+
         for i in range(len(intervalos) - 1):
             a = intervalos[i]
-            b = intervalos[i+1]
+            b = intervalos[i + 1]
 
             # Chamada da função para obter as raizes positivas de P_n no intervalo [a,b] pelo Método de Newton Modificado
             resultado = zero_funcao(
-                f = p_atual, 
-                df = dp_atual, 
-                a = a, 
-                b = b, 
-                x0 = a,
-                relatorio=False)
+                f=p_atual, df=dp_atual, a=a, b=b, x0=a, relatorio=False
+            )
             raiz = resultado.x
 
             # Acrescenta valor da raiz calculada
@@ -440,26 +436,27 @@ def calcula_valores_quadratura(grau: int, imprimir: bool = True):
                 raise ZeroDivisionError("Derivada nula na raiz encontrada.")
             peso = 2.0 / ((1.0 - raiz**2) * (deriv_raiz**2))
             pesos_n.append(peso)
-        
+
         # Ao terminar de achar todas as raízes para o grau N:
         raizes.append(np.array(raizes_n))
         pesos.append(np.array(pesos_n))
 
     # Imprime os valores calculados pela função
     if imprimir:
-        print(f"{'Grau de P_N':<13} | {'Raízes':<50} | {'Pesos'}")
+        print(f"{'Grau P_N':<9} | {'Raízes':<65} | {'Pesos'}")
         print("-" * 110)
         for n in range(1, len(raizes)):
             rn = raizes[n]
             wn = pesos[n]
-        
+
             if len(rn) > 0:
-                str_raizes = ", ".join([f"{x:.6f}" for x in rn])
-                str_pesos = ", ".join([f"{w:.6f}" for w in wn])
-            
-                print(f"{n:<13} | {str_raizes:<50} | {str_pesos}")
+                str_raizes = ", ".join([f"{x:.4f}" for x in rn])
+                str_pesos = ", ".join([f"{w:.4f}" for w in wn])
+
+                print(f"{n:<9} | {str_raizes:<65} | {str_pesos}")
 
     return raizes, pesos
+
 
 # TAREFA 4: Formulas de quadratura de Gauss-Legendre
 # Resultado

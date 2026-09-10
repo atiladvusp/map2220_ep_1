@@ -1,0 +1,69 @@
+LEIA-ME - EP1 MAP2220
+====================
+
+O material entregue deve contem apenas os arquivos main.py e leiame.txt e o relatorio.tex
+no mesmo diretorio. 
+
+
+1. REQUISITOS E INSTALACAO
+--------------------------
+
+E necessario ter Python 3.13 ou mais recente e a biblioteca NumPy 2.5.2 ou
+mais recente. No diretorio que contem main.py, execute:
+
+    python -m pip install "numpy>=2.5.2"
+
+Nenhuma outra biblioteca externa e necessaria para executar o programa.
+
+
+2. EXECUCAO
+-----------
+
+Execute:
+
+    python main.py
+
+O script imprime os resultados dos casos propostos no EP: queda de um corpo,
+catenaria e quadratura de Gauss-Legendre. A quadratura e calculada para os
+graus de 1 a 16.
+
+
+3. FUNCOES DISPONIVEIS
+----------------------
+
+As funcoes abaixo podem ser usadas para testar outros valores:
+
+- zero_funcao: metodo de Newton modificado;
+- encontrar_k_queda_corpo: tarefa 3.1;
+- encontrar_beta_catenaria: tarefa 3.2;
+- avaliar_legendre: calcula P_n(x) e sua derivada;
+- calcula_valores_quadratura: tarefa 4.
+
+As assinaturas, os argumentos, os valores padrao, os retornos e as condicoes
+de uso estao documentados nos docstrings dessas funcoes em main.py. Consulte
+esses docstrings antes de alterar os parametros. Em particular, os intervalos
+usados por zero_funcao devem conter uma troca de sinal.
+
+Exemplo de uso de zero_funcao para calcular a raiz de x^2 - 2:
+
+    from main import zero_funcao
+
+    f = lambda x: x**2 - 2
+    df = lambda x: 2*x
+    resultado = zero_funcao(f, df, 0.0, 2.0)
+    print(resultado.x)
+
+Para executar outros casos, altere os argumentos das funcoes acima ou as
+chamadas padrao no final de main.py. A funcao calcula_valores_quadratura aceita
+graus entre 1 e 30; com imprimir=False, seus resultados podem ser consultados
+sem imprimir a tabela:
+
+    from main import calcula_valores_quadratura
+
+    raizes, pesos = calcula_valores_quadratura(8, imprimir=False)
+    print(raizes[8])
+    print(pesos[8])
+
+Confira sempre se os valores escolhidos formam um problema valido para a
+funcao, especialmente o intervalo de busca, a troca de sinal, as tolerancias
+e o numero maximo de iteracoes.

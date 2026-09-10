@@ -142,10 +142,17 @@ def test_funcao_pode_nao_convergir_so_newton_2() -> None:
         resultado = zero_funcao(f, df, -2, 2, x0=1, metodo="somente_newton")
 
 
+def test_funcao_roberta() -> None:
+    f = lambda x: x**3 - 3 * x + 1
+    df = lambda x: 3 * x**2 - 3
+    resultado = zero_funcao(f, df, -2, 0, x0=-1, metodo="modificado")
+    assert resultado.convergiu and np.isclose(resultado.x, -1.8794)
+
+
 def test_derivada_muito_pequena_cai_para_dicotomia() -> None:
     f = lambda x: x**3 - 1.0e-12
     df = lambda x: 3.0 * x * x
-    resultado = zero_funcao(f, df, 0.0, 1.0, x0=0.0)
+    resultado = zero_funcao(f, df, 0.0, 1.0, x0=1.0e-12, atol=1.0e-16)
     assert resultado.convergiu is True
     assert resultado.contagem_bissecao >= 1
     assert abs(resultado.x - 1.0e-4) < 1.0e-7
@@ -233,6 +240,7 @@ def test_encontrar_beta_catenaria() -> None:
 
 
 from numpy.polynomial.legendre import Legendre, leggauss
+
 from src.main import (
     avaliar_legendre,
     calcula_valores_quadratura,
@@ -286,7 +294,7 @@ def test_legendre_em_x_igual_menos_1(n):
 @pytest.mark.parametrize("x", [-0.75, -0.5, 0.0, 0.5, 0.75])
 def test_avaliar_legendre(grau: int, x: float) -> None:
     """
-    Testa a função avaliar_legendre para P_7(x) ao P_10(x) comparando o valor do 
+    Testa a função avaliar_legendre para P_7(x) ao P_10(x) comparando o valor do
     polinômio e de sua derivada com a implementação de referência do NumPy.
     """
     # Valor obtido pela função avaliar_legendre
@@ -305,9 +313,7 @@ def test_avaliar_legendre(grau: int, x: float) -> None:
 def test_quadratura_grau_2():
     raizes, pesos = calcula_valores_quadratura(2, imprimir=False)
 
-    assert raizes[2] == pytest.approx(
-        [1.0 / np.sqrt(3.0)]
-    )
+    assert raizes[2] == pytest.approx([1.0 / np.sqrt(3.0)])
 
     assert pesos[2] == pytest.approx([1.0])
 
@@ -388,13 +394,16 @@ def test_integracao_polinomio_grau_10() -> None:
     no intervalo [-1, 1] com n=6 nós.
     Uma quadratura com n nós é exata para polinômios de grau até 2n - 1 (2*6 - 1 = 11).
     """
+
     # Definição da função integranda e sua integral exata no intervalo [-1, 1]
     # f(x) = x^10 + 3*x^8 - 2*x^5 + x^2 + 1
     def f(x):
         return x**10 + 3.0 * x**8 - 2.0 * x**5 + x**2 + 1.0
 
     # Integral exata: \int_{-1}^{1} (x^10 + 3x^8 - 2x^5 + x^2 + 1) dx = 2/11 + 6/9 + 0 + 2/3 + 2
-    integral_exata = (2.0 / 11.0) + (6.0 / 9.0) + (2.0 / 3.0) + 2.0  # = 116 / 33 ~ 3.515151...
+    integral_exata = (
+        (2.0 / 11.0) + (6.0 / 9.0) + (2.0 / 3.0) + 2.0
+    )  # = 116 / 33 ~ 3.515151...
 
     # Obtém raízes e pesos não-negativos para n = 6
     raizes, pesos = calcula_valores_quadratura(grau=6, imprimir=False)

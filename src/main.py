@@ -128,7 +128,7 @@ def zero_funcao(
         elif metodo == "somente_newton":
             usar_newton = True
             dfxn = float(df(xn))
-        else:
+        else:  # Caso do metodo "modificado" (caso solicitado pelo EP)
             dfxn = float(df(xn))
 
             # # AVALIA CRITERIOS DE SELECAO DE METODO
@@ -157,8 +157,10 @@ def zero_funcao(
         iteracoes = n + 1
 
         # Critério de parada (a)
+        prox_zero = np.isclose(fxn1, 0.0, atol=atol, rtol=rtol)
+        # Garantindo que esta proximo de zero para que o criterio (a) esteja correto.
         delta = xn1 - xn
-        if abs(delta) < atol + rtol * abs(xn1):
+        if abs(delta) < atol + rtol * abs(xn1) and prox_zero:
             xn = xn1
             fxn = fxn1
             convergiu = True
@@ -172,7 +174,7 @@ def zero_funcao(
             break
 
         # Critério de parada (c)
-        if np.isclose(fxn1, 0.0, atol=np.finfo(float).eps, rtol=0.0):
+        if np.isclose(fxn1, 0.0, atol=atol, rtol=rtol):
             xn = xn1
             fxn = fxn1
             convergiu = True
@@ -266,11 +268,6 @@ def encontrar_k_queda_corpo(
     return zero_funcao(f, df, a, b, relatorio=relatorio)
 
 
-# TAREFA 3.1: Determinar k para a queda de um corpo com velocidade alvo v_alvo
-# # Resultado
-encontrar_k_queda_corpo(relatorio=True)
-
-
 # TAREFA 3.2: Altura dos FIos de transmissao de eletrecidade
 # # Implementacao
 def encontrar_beta_catenaria(
@@ -306,11 +303,6 @@ def encontrar_beta_catenaria(
 
     print("\n\nTAREFA 3.2:\n")
     return zero_funcao(func, d_func, a, b, relatorio=relatorio)
-
-
-# TAREFA 3.2 Altura dos FIos de transmissao de eletrecidade
-# # Resultado
-encontrar_beta_catenaria(relatorio=True)
 
 
 # TAREFA 4: Formulas de quadratura de Gauss-Legendre
@@ -456,6 +448,15 @@ def calcula_valores_quadratura(grau: int, imprimir: bool = True):
                 print(f"{n:<9} | {str_raizes:<65} | {str_pesos}")
 
     return raizes, pesos
+
+
+# TAREFA 3.1: Determinar k para a queda de um corpo com velocidade alvo v_alvo
+# # Resultado
+encontrar_k_queda_corpo(relatorio=True)
+
+# TAREFA 3.2 Altura dos FIos de transmissao de eletrecidade
+# # Resultado
+encontrar_beta_catenaria(relatorio=True)
 
 
 # TAREFA 4: Formulas de quadratura de Gauss-Legendre

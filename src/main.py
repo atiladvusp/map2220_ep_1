@@ -1,3 +1,10 @@
+# # #
+# EP 1
+# Alunos:
+# Átila da Veiga -- NUSP: 12491731
+# Roberta de Souza Pereira -- NUSP: 13687794
+# # #
+
 from __future__ import annotations
 
 import math

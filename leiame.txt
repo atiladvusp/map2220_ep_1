@@ -1,5 +1,9 @@
 LEIA-ME - EP1 MAP2220
 ====================
+Alunos:
+Átila da Veiga -- NUSP: 12491731
+Roberta de Souza Pereira -- NUSP: 13687794
+
 
 O material entregue deve contem apenas os arquivos main.py e leiame.txt e o relatorio.tex
 no mesmo diretorio. 

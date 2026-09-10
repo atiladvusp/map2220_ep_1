@@ -189,6 +189,16 @@ def test_x0_invalido_gera_erro() -> None:
         zero_funcao(f, df, 0.0, 5.0, x0=-1.0)
 
 
+@pytest.mark.skip(reason="decidicmo nao fazer early stop.")
+def test_x0_e_solucao_exata() -> None:
+    f = lambda x: x - 2.0
+    df = lambda x: 1.0
+    resultado = zero_funcao(f, df, 0.0, 5.0, x0=2.0)
+    assert resultado.convergiu is True
+    assert resultado.motivo_parada == "raiz_exata"
+    assert np.isclose(resultado.x, 2.0)
+
+
 def test_parametros_invalidos_geram_erro() -> None:
     f = lambda x: x - 1.0
     df = lambda x: 1.0

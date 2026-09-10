@@ -230,3 +230,185 @@ def test_encontrar_beta_catenaria() -> None:
     beta = resultado.x
     diferenca = beta * (math.cosh(10.0 / beta) - 1.0)
     assert abs(diferenca - 0.5) < 1.0e-7
+
+
+from numpy.polynomial.legendre import Legendre, leggauss
+from src.main import (
+    avaliar_legendre,
+    calcula_valores_quadratura,
+)
+
+
+def test_legendre_p3():
+    x = 0.3
+
+    p, dp = avaliar_legendre(3, x)
+
+    p_exato = (5.0 * x**3 - 3.0 * x) / 2.0
+    dp_exato = 1.5 * (5.0 * x**2 - 1.0)
+
+    assert p == pytest.approx(p_exato)
+    assert dp == pytest.approx(dp_exato)
+
+
+def test_legendre_p4():
+    x = 0.3
+
+    p, dp = avaliar_legendre(4, x)
+
+    p_exato = (35.0 * x**4 - 30.0 * x**2 + 3.0) / 8.0
+    dp_exato = (35.0 * x**3 - 15.0 * x) / 2.0
+
+    assert p == pytest.approx(p_exato)
+    assert dp == pytest.approx(dp_exato)
+
+
+@pytest.mark.parametrize("n", range(0, 11))
+def test_legendre_em_x_igual_1(n):
+    p, dp = avaliar_legendre(n, 1.0)
+
+    assert p == pytest.approx(1.0)
+    assert dp == pytest.approx(n * (n + 1.0) / 2.0)
+
+
+@pytest.mark.parametrize("n", range(0, 11))
+def test_legendre_em_x_igual_menos_1(n):
+    p, dp = avaliar_legendre(n, -1.0)
+
+    valor_esperado = (-1.0) ** n
+    derivada_esperada = (-1.0) ** (n + 1) * n * (n + 1.0) / 2.0
+
+    assert p == pytest.approx(valor_esperado)
+    assert dp == pytest.approx(derivada_esperada)
+
+
+@pytest.mark.parametrize("grau", [7, 10])
+@pytest.mark.parametrize("x", [-0.75, -0.5, 0.0, 0.5, 0.75])
+def test_avaliar_legendre(grau: int, x: float) -> None:
+    """
+    Testa a função avaliar_legendre para P_7(x) ao P_10(x) comparando o valor do 
+    polinômio e de sua derivada com a implementação de referência do NumPy.
+    """
+    # Valor obtido pela função avaliar_legendre
+    val_obtido, deriv_obtida = avaliar_legendre(grau, x)
+
+    # Valor esperado (calculado via NumPy)
+    leg = Legendre.basis(grau)
+    val_esperado = leg(x)
+    deriv_esperada = leg.deriv()(x)
+
+    # Validação com tolerância para erros de ponto flutuante
+    assert val_obtido == pytest.approx(val_esperado, abs=1e-12)
+    assert deriv_obtida == pytest.approx(deriv_esperada, abs=1e-12)
+
+
+def test_quadratura_grau_2():
+    raizes, pesos = calcula_valores_quadratura(2, imprimir=False)
+
+    assert raizes[2] == pytest.approx(
+        [1.0 / np.sqrt(3.0)]
+    )
+
+    assert pesos[2] == pytest.approx([1.0])
+
+
+def test_quadratura_grau_3():
+    raizes, pesos = calcula_valores_quadratura(3, imprimir=False)
+
+    raizes_exatas = [
+        0.0,
+        np.sqrt(3.0 / 5.0),
+    ]
+
+    pesos_exatos = [
+        8.0 / 9.0,
+        5.0 / 9.0,
+    ]
+
+    assert raizes[3] == pytest.approx(raizes_exatas)
+    assert pesos[3] == pytest.approx(pesos_exatos)
+
+
+@pytest.mark.parametrize("n", range(1, 17))
+def test_raizes_realmente_sao_raizes(n):
+    raizes, _ = calcula_valores_quadratura(n, imprimir=False)
+
+    for x in raizes[n]:
+        p, _ = avaliar_legendre(n, x)
+        assert p == pytest.approx(0.0, abs=1e-8)
+
+
+def test_calcula_valores_quadratura_grau_7() -> None:
+    """
+    Testa a função calcula_valores_quadratura para N=7 comparando os nós não-negativos
+    e seus respectivos pesos com a referência do NumPy.
+    """
+    grau = 7
+    raizes, pesos = calcula_valores_quadratura(grau=grau, imprimir=False)
+
+    # NumPy retorna os nós ordenados de forma crescente [-x_max, ..., +x_max]
+    nos_ref, pesos_ref = leggauss(grau)
+
+    # Seleciona as raízes não-negativas (as últimas (N+1)//2 raízes)
+    inicio_nao_negativos = grau // 2
+    nos_ref_pos = nos_ref[inicio_nao_negativos:]
+    pesos_ref_pos = pesos_ref[inicio_nao_negativos:]
+
+    # Se N for ímpar, força o nó central (que teoricamente é 0.0) a ser exatamente 0.0
+    if grau % 2 != 0:
+        nos_ref_pos[0] = 0.0
+
+    # Validação dos resultados
+    np.testing.assert_allclose(raizes[7], nos_ref_pos, atol=1e-10)
+    np.testing.assert_allclose(pesos[7], pesos_ref_pos, atol=1e-10)
+
+
+@pytest.mark.parametrize("n", range(1, 17))
+def test_pesos_positivos(n):
+    _, pesos = calcula_valores_quadratura(n, imprimir=False)
+
+    assert np.all(pesos[n] > 0.0)
+
+
+@pytest.mark.parametrize("n", range(1, 17))
+def test_soma_dos_pesos(n):
+    _, pesos = calcula_valores_quadratura(n, imprimir=False)
+
+    if n % 2 == 0:
+        soma = 2.0 * np.sum(pesos[n])
+    else:
+        soma = pesos[n][0] + 2.0 * np.sum(pesos[n][1:])
+
+    assert soma == pytest.approx(2.0, abs=1e-9)
+
+
+def test_integracao_polinomio_grau_10() -> None:
+    """
+    Testa a quadratura de Gauss-Legendre integrando f(x) = x^10 + 3*x^8 - 2*x^5 + x^2 + 1
+    no intervalo [-1, 1] com n=6 nós.
+    Uma quadratura com n nós é exata para polinômios de grau até 2n - 1 (2*6 - 1 = 11).
+    """
+    # Definição da função integranda e sua integral exata no intervalo [-1, 1]
+    # f(x) = x^10 + 3*x^8 - 2*x^5 + x^2 + 1
+    def f(x):
+        return x**10 + 3.0 * x**8 - 2.0 * x**5 + x**2 + 1.0
+
+    # Integral exata: \int_{-1}^{1} (x^10 + 3x^8 - 2x^5 + x^2 + 1) dx = 2/11 + 6/9 + 0 + 2/3 + 2
+    integral_exata = (2.0 / 11.0) + (6.0 / 9.0) + (2.0 / 3.0) + 2.0  # = 116 / 33 ~ 3.515151...
+
+    # Obtém raízes e pesos não-negativos para n = 6
+    raizes, pesos = calcula_valores_quadratura(grau=6, imprimir=False)
+    nos_positivos = raizes[6]
+    pesos_positivos = pesos[6]
+
+    # Reconstrução da regra de quadratura usando a simetria de Gauss-Legendre:
+    # \sum w_i * f(x_i) = \sum w_j * (f(x_j) + f(-x_j)) para x_j > 0
+    integral_numerica = 0.0
+    for x_j, w_j in zip(nos_positivos, pesos_positivos):
+        if np.isclose(x_j, 0.0):
+            integral_numerica += w_j * f(0.0)
+        else:
+            integral_numerica += w_j * (f(x_j) + f(-x_j))
+
+    # O erro deve ser limitado apenas à precisão de ponto flutuante (~1e-10)
+    assert integral_numerica == pytest.approx(integral_exata, abs=1e-10)

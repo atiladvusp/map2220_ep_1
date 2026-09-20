@@ -442,6 +442,7 @@ def calcula_valores_quadratura(grau: int, imprimir: bool = True):
 
     # Imprime os valores calculados pela função
     if imprimir:
+        print("Raízes não negativas dos Polinômios de Legengre e respectivos pesos da Fórmula de Quadratura")
         print(f"{'Grau P_N':<9} | {'Raízes':<65} | {'Pesos'}")
         print("-" * 110)
         for n in range(1, len(raizes)):

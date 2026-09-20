@@ -236,7 +236,7 @@ def encontrar_k_queda_corpo(
     v0: float = 3.0,  # valor sugerido na tarefa
     t: float = 2.0,
     v_alvo: float = 20.0,  # v(2) conforme tarefa
-    a: float = -1.0,
+    a: float = 0.1,
     b: float = 5.0,
     relatorio: bool = False,
 ) -> Resultado:
